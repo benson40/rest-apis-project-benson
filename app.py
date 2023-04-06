@@ -5,6 +5,7 @@ from flask import Flask, jsonify
 from flask_smorest import Api
 from flask_jwt_extended import JWTManager
 from flask_migrate import Migrate
+from dotenv import load_dotenv
 
 from db import db
 from blocklist import BLOCKLIST
@@ -19,6 +20,7 @@ from resources.user import blp as UserBlueprint
 #A factory pattern
 def create_app(db_url=None):
     app = Flask(__name__) 
+    load_dotenv() #This will find a .env file existing at the root of the project and load its content
 
     #Some configurations
     app.config["PROPAGATE_EXCEPTIONS"]=True #tells if there are any exceptions propagate it to the main app so that we can see it
@@ -30,11 +32,11 @@ def create_app(db_url=None):
     app.config["OPENAPI_SWAGGER_UI_URL"] = "https://cdn.jsdelivr.net/npm/swagger-ui-dist/" #this is where swagger code is there
     
     #Define database URL
-    app.config["SQLALCHEMY_DATABASE_URI"] = db_url or os.getenv("DATABASE_URL","sqlite:///data.db")
+    app.config["SQLALCHEMY_DATABASE_URI"] = db_url or os.getenv("DATABASE_URL","sqlite:///data.db") #Now os.getenv will be able to access the value stored in .env
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
     db.init_app(app) #Initializes the flask sqlalchemy extension, giving it our flask app so that it connects our flask app to sqlalchemy
 
-    migrate = Migrate(app,db) #We are migrating app and db. So this has to be created after db.init_app(app)
+    migrate = Migrate(app,db,compare_type=True) #We are migrating app and db. So this has to be created after db.init_app(app)
     
     api = Api(app) #This basically connects the flask smorest extension to the flask app.
 
